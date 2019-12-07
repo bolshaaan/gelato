@@ -23,6 +23,16 @@ type ItemRule struct {
 }
 type ItemRules map[SKU]ItemRule
 
+func (r *TotalPriceRule) Apply(totalPrice int) int {
+	// Make discount if AmountTreshold achieved
+	if totalPrice < r.AmountThreshold {
+		return totalPrice
+	}
+	// apply discount
+	totalPrice = totalPrice - (totalPrice*r.DiscountPercent)/100.0
+	return totalPrice
+}
+
 func (r *ItemRule) Apply(item Item) (totalPrice int) {
 	mod := item.Count % r.Count
 	totalPrice += mod * item.Price
@@ -35,7 +45,7 @@ func (r *ItemRule) Apply(item Item) (totalPrice int) {
 // Rules is collection of different price rules
 type Rules struct {
 	// TotalRules is rules for total price in cart
-	TotalPriceRules []TotalPriceRule
+	TotalPriceRule TotalPriceRule
 	// ItemRules is rules by 1 item
 	ItemRules ItemRules
 }

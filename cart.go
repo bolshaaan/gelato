@@ -38,5 +38,8 @@ func (c *Cart) Total() int {
 		totalPrice += rule.Apply(item)
 	}
 
+	// execute rule on total price
+	totalPrice = c.Rules.TotalPriceRule.Apply(totalPrice)
+
 	return totalPrice
 }

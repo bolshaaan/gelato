@@ -83,6 +83,38 @@ func TestCart_Total(t *testing.T) {
 	})
 
 	t.Run("Test total price rules", func(t *testing.T) {
+		tests := []struct {
+			inItems        []Item
+			inRules        Rules
+			expectedAmount int
+			desc           string
+		}{
+			{
+				[]Item{
+					{SKU: "A", Count: 1, Price: 100},
+					{SKU: "B", Count: 1, Price: 100},
+					{SKU: "C", Count: 1, Price: 100},
+				},
+				Rules{TotalPriceRule: TotalPriceRule{
+					DiscountPercent: 50,
+					AmountThreshold: 100,
+				}},
+				150,
+				"Zero items - return 0",
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.desc, func(t *testing.T) {
+				cart := NewCart(test.inRules)
+
+				for _, item := range test.inItems {
+					cart.Scan(item)
+				}
+
+				assert.Equal(t, cart.Total(), test.expectedAmount)
+			})
+		}
 
 	})
 
