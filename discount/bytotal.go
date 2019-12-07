@@ -8,6 +8,7 @@ type ByTotalPrice struct {
 	AmountThreshold int
 }
 
+// Apply discount total price
 func (r *ByTotalPrice) Apply(totalPrice int) int {
 	// Make discount if AmountTreshold achieved
 	if totalPrice < r.AmountThreshold {
