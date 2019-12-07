@@ -23,11 +23,14 @@ type ItemRule struct {
 }
 type ItemRules map[SKU]ItemRule
 
-//func (ir ItemRules) Add(newItem ItemRule) error  {
-//
-//
-//
-//}
+func (r *ItemRule) Apply(item Item) (totalPrice int) {
+	mod := item.Count % r.Count
+	totalPrice += mod * item.Price
+	//fmt.Println("mdo", mod, "price", item.Price, "totalPrice", totalPrice)
+	totalPrice += (item.Count - mod) / r.Count * r.Amount
+	//fmt.Println("mdo", mod, "price", item.Price, "totalPrice", totalPrice, "diff", item.Count-mod, item.Count)
+	return
+}
 
 // Rules is collection of different price rules
 type Rules struct {

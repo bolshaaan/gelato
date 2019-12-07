@@ -1,5 +1,7 @@
 package gelato
 
+import "fmt"
+
 // Cart contains items with rules
 type Cart struct {
 	Items Items
@@ -16,14 +18,25 @@ func NewCart(rules Rules) *Cart {
 func (c *Cart) Scan(item Item) {
 	if v, ok := c.Items[item.SKU]; ok {
 		v.Count += item.Count
+		c.Items[item.SKU] = v
 	} else {
 		c.Items[item.SKU] = item
 	}
 }
 
 func (c *Cart) Total() int {
+	var totalPrice int
+	fmt.Println(c.Items)
+	for sku, item := range c.Items {
 
-	// apply rules
+		rule, ok := c.Rules.ItemRules[sku]
+		if !ok {
+			totalPrice += item.Price * item.Count
+			continue
+		}
 
-	return 0
+		totalPrice += rule.Apply(item)
+	}
+
+	return totalPrice
 }
