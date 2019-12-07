@@ -1,0 +1,43 @@
+package gelato
+
+// RulePricer calculates discount
+type RulePricer interface {
+	Price(SKU string) int
+}
+
+type RuleTotaler interface {
+}
+
+// TotalPriceRule  makes rule for total prices
+type TotalPriceRule struct {
+	// DiscountPercent from 0 to 100
+	DiscountPercent int
+	// AmountThreshold
+	AmountThreshold int
+}
+
+// ItemRule shows price Amount for Count items
+type ItemRule struct {
+	Count  int
+	Amount int
+}
+type ItemRules map[SKU]ItemRule
+
+//func (ir ItemRules) Add(newItem ItemRule) error  {
+//
+//
+//
+//}
+
+// Rules is collection of different price rules
+type Rules struct {
+	// TotalRules is rules for total price in cart
+	TotalPriceRules []TotalPriceRule
+	// ItemRules is rules by 1 item
+	ItemRules ItemRules
+}
+
+// NewRules is rules constructor
+func NewRules() *Rules {
+	return &Rules{}
+}
