@@ -9,24 +9,29 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/bolshaaan/gelato"
 	"github.com/pkg/errors"
 )
 
-type ItemDiscounts map[gelato.SKU]ByItem
-
 // Collection is collection of different price rules
+// ByItem stores in sync.Map
+// this primitive is useful because collection will be only once updated (at the start of application)
+// and ByItem can be read by many goroutines so we reduce lock contention with sync.Map (instead simple
+// map with Mutexes)
 type Collection struct {
+	// ByItem is rules by 1 item
+	ByItem *sync.Map
 	// TotalRules is rules for total price in cart
 	ByTotalPrice ByTotalPrice
-	// ByItem is rules by 1 item
-	ByItem ItemDiscounts
 }
 
 // NewCollection is rules constructor
 func NewCollection() *Collection {
-	return &Collection{}
+	return &Collection{
+		ByItem: &sync.Map{},
+	}
 }
 
 // SetTotalDiscount  adds total discount
@@ -37,10 +42,10 @@ func (c *Collection) SetTotalDiscount(percent, treshold int) {
 // SetItemDiscount adds item discount
 func (c *Collection) SetItemDiscount(sku gelato.SKU, count, amount int) {
 	if c.ByItem == nil {
-		c.ByItem = make(ItemDiscounts)
+		c.ByItem = &sync.Map{}
 	}
 
-	c.ByItem[sku] = *NewByItem(count, amount)
+	c.ByItem.Store(sku, *NewByItem(count, amount))
 }
 
 // LoadFromFile loads from file
@@ -57,7 +62,9 @@ func LoadFromFile(fileName string) (*Collection, error) {
 
 	buf := bufio.NewReader(file)
 
-	c.ByItem = make(ItemDiscounts)
+	if c.ByItem == nil {
+		c.ByItem = &sync.Map{}
+	}
 
 	var lineNumber int
 	var eof bool
@@ -94,10 +101,10 @@ func LoadFromFile(fileName string) (*Collection, error) {
 			return nil, fmt.Errorf("amount is less then 1, line number: %d", lineNumber)
 		}
 
-		if _, ok := c.ByItem[gelato.SKU(r[0])]; ok {
+		if _, ok := c.ByItem.Load(gelato.SKU(r[0])); ok {
 			return nil, fmt.Errorf("duplicate rule, line number: %d", lineNumber)
 		}
-		fmt.Println("count", count, "amount", amount)
+
 		c.SetItemDiscount(gelato.SKU(r[0]), count, amount)
 
 		lineNumber++

@@ -15,43 +15,38 @@ func TestCart_Total(t *testing.T) {
 	t.Run("Test item price rules", func(t *testing.T) {
 		tests := []struct {
 			inItems        []gelato.Item
-			inRules        discount.Collection
+			inRules        []gelato.Item
 			expectedAmount int
 			desc           string
 		}{
 			{
 				[]gelato.Item{},
-				discount.Collection{ByItem: discount.ItemDiscounts{}},
+				[]gelato.Item{},
 				0,
 				"Zero items - return 0",
 			},
 			{
 				[]gelato.Item{{SKU: "A", Count: 3, Price: 13}},
-				discount.Collection{ByItem: discount.ItemDiscounts{}},
+				[]gelato.Item{},
 				39,
 				"Apply empty rules - no discount",
 			},
 			{
 				[]gelato.Item{{SKU: "A", Count: 3, Price: 13}},
-				discount.Collection{ByItem: discount.ItemDiscounts{
-					gelato.SKU("A"): discount.ByItem{Count: 3, Amount: 30},
-				}},
+				[]gelato.Item{{SKU: "A", Count: 3, Price: 30}},
 				30,
 				"Buy 3 items for 30 dollars",
 			},
 			{
 				[]gelato.Item{{SKU: "A", Count: 2, Price: 13}},
-				discount.Collection{ByItem: discount.ItemDiscounts{
-					gelato.SKU("A"): discount.ByItem{Count: 3, Amount: 30},
-				}},
+				[]gelato.Item{{SKU: "A", Count: 3, Price: 30}},
+
 				26,
 				"Have only 2 items for 26 dollars - no discount",
 			},
 			{
 				[]gelato.Item{{SKU: "A", Count: 4, Price: 13}},
-				discount.Collection{ByItem: discount.ItemDiscounts{
-					gelato.SKU("A"): discount.ByItem{Count: 3, Amount: 30},
-				}},
+				[]gelato.Item{{SKU: "A", Count: 3, Price: 30}},
 				43, // 30 + 13
 				"By 4 items - 3 discount 1 - no",
 			},
@@ -63,10 +58,10 @@ func TestCart_Total(t *testing.T) {
 					{SKU: "C", Count: 1, Price: 3},
 					{SKU: "A", Count: 1, Price: 13},
 				},
-				discount.Collection{ByItem: discount.ItemDiscounts{
-					gelato.SKU("A"): discount.ByItem{Count: 3, Amount: 30},
-					gelato.SKU("B"): discount.ByItem{Count: 2, Amount: 10},
-				}},
+				[]gelato.Item{
+					{SKU: "A", Count: 3, Price: 30},
+					{SKU: "B", Count: 2, Price: 10},
+				},
 				40, // A = 30  + B = 7 + C = 3
 				"Different items - A = 30  + B = 7 + C = 3  = 40 ",
 			},
@@ -74,7 +69,13 @@ func TestCart_Total(t *testing.T) {
 
 		for _, test := range tests {
 			t.Run(test.desc, func(t *testing.T) {
-				cart := NewCart(test.inRules)
+
+				collection := discount.NewCollection()
+				for _, v := range test.inRules {
+					collection.SetItemDiscount(v.SKU, v.Count, v.Price)
+				}
+
+				cart := NewCart(collection)
 
 				for _, item := range test.inItems {
 					cart.Scan(item)
@@ -89,7 +90,7 @@ func TestCart_Total(t *testing.T) {
 	t.Run("Test total price rules", func(t *testing.T) {
 		tests := []struct {
 			inItems        []gelato.Item
-			inRules        discount.Collection
+			inRules        discount.ByTotalPrice
 			expectedAmount int
 			desc           string
 		}{
@@ -99,10 +100,7 @@ func TestCart_Total(t *testing.T) {
 					{SKU: "B", Count: 1, Price: 100},
 					{SKU: "C", Count: 1, Price: 100},
 				},
-				discount.Collection{ByTotalPrice: discount.ByTotalPrice{
-					DiscountPercent: 50,
-					AmountThreshold: 100,
-				}},
+				discount.ByTotalPrice{50, 100},
 				150,
 				"Zero items - return 0",
 			},
@@ -110,7 +108,10 @@ func TestCart_Total(t *testing.T) {
 
 		for _, test := range tests {
 			t.Run(test.desc, func(t *testing.T) {
-				cart := NewCart(test.inRules)
+				collection := discount.NewCollection()
+				collection.SetTotalDiscount(test.inRules.DiscountPercent, test.inRules.AmountThreshold)
+
+				cart := NewCart(collection)
 
 				for _, item := range test.inItems {
 					cart.Scan(item)

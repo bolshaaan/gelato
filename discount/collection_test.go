@@ -14,7 +14,13 @@ func TestLoadFromFile(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, c)
 
-		assert.Equal(t, 100, c.ByItem[gelato.SKU("0")].Count)
-		assert.Equal(t, 123, c.ByItem[gelato.SKU("0")].Amount)
+		val, ok := c.ByItem.Load(gelato.SKU("0"))
+		assert.True(t, ok)
+		v, ok := val.(ByItem)
+		assert.True(t, ok)
+
+		assert.Equal(t, 100, v.Count)
+		assert.Equal(t, 123, v.Amount)
+
 	})
 }
