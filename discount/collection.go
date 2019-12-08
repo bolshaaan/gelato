@@ -48,6 +48,11 @@ func (c *Collection) SetItemDiscount(sku gelato.SKU, count, amount int) {
 	c.ByItem.Store(sku, *NewByItem(count, amount))
 }
 
+// GetTotalDiscount returns total discount rule
+func (c *Collection) GetTotalDiscount() *ByTotalPrice {
+	return &c.ByTotalPrice
+}
+
 // GetItemDiscount returns discount by sku
 // returns nil if no discount for item
 func (c *Collection) GetItemDiscount(sku gelato.SKU) *ByItem {

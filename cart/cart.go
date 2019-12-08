@@ -11,14 +11,14 @@ var _ gelato.Checkout = &Cart{}
 // Cart contains items with rules
 type Cart struct {
 	ItemsBySKU gelato.ItemsBySKU
-	Discount   *discount.Collection
+	Discount   discount.Rules
 }
 
 // NewCart generates new Cart
-func NewCart(c *discount.Collection) *Cart {
+func NewCart(rulesDiscount discount.Rules) *Cart {
 	return &Cart{
 		ItemsBySKU: make(gelato.ItemsBySKU),
-		Discount:   c,
+		Discount:   rulesDiscount,
 	}
 }
 
@@ -49,7 +49,7 @@ func (c *Cart) Total() int {
 	}
 
 	// execute rule on total price
-	totalPrice = c.Discount.ByTotalPrice.Apply(totalPrice)
+	totalPrice = c.Discount.GetTotalDiscount().Apply(totalPrice)
 
 	return totalPrice
 }
