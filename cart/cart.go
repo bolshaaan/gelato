@@ -32,6 +32,8 @@ func (c *Cart) Scan(item gelato.Item) {
 	}
 }
 
+// Total calculates total sum of products
+// in cart applying all discount rules
 func (c *Cart) Total() int {
 	var totalPrice int
 

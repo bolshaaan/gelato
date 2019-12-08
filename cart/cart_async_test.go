@@ -11,7 +11,7 @@ import (
 	"github.com/bolshaaan/gelato/discount"
 )
 
-// Test that we can  use cart in many goroutines
+// Test that we can  use cart in many goroutines and have no data races
 // run with -race
 func TestCart_AsyncTotal(t *testing.T) {
 	col := discount.NewCollection()
