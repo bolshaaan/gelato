@@ -10,25 +10,25 @@ var _ gelato.Checkout = &Cart{}
 
 // Cart contains items with rules
 type Cart struct {
-	Items    gelato.Items
-	Discount *discount.Collection
+	ItemsBySKU gelato.ItemsBySKU
+	Discount   *discount.Collection
 }
 
 // NewCart generates new Cart
 func NewCart(c *discount.Collection) *Cart {
 	return &Cart{
-		Items:    make(gelato.Items),
-		Discount: c,
+		ItemsBySKU: make(gelato.ItemsBySKU),
+		Discount:   c,
 	}
 }
 
 // Scan adds new item to cart
 func (c *Cart) Scan(item gelato.Item) {
-	if v, ok := c.Items[item.SKU]; ok {
+	if v, ok := c.ItemsBySKU[item.SKU]; ok {
 		v.Count += item.Count
-		c.Items[item.SKU] = v
+		c.ItemsBySKU[item.SKU] = v
 	} else {
-		c.Items[item.SKU] = item
+		c.ItemsBySKU[item.SKU] = item
 	}
 }
 
@@ -37,15 +37,14 @@ func (c *Cart) Scan(item gelato.Item) {
 func (c *Cart) Total() int {
 	var totalPrice int
 
-	for sku, item := range c.Items {
+	for sku, item := range c.ItemsBySKU {
 
-		loadedByItem, ok := c.Discount.ByItem.Load(sku)
-		if !ok {
+		disc := c.Discount.GetItemDiscount(sku)
+		if disc == nil {
 			totalPrice += item.Price * item.Count
 			continue
 		}
-		// do not check error, because values are always discount.ByItem type
-		disc := loadedByItem.(discount.ByItem)
+
 		totalPrice += disc.Apply(item.Count, item.Price)
 	}
 

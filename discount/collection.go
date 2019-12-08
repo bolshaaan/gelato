@@ -48,6 +48,25 @@ func (c *Collection) SetItemDiscount(sku gelato.SKU, count, amount int) {
 	c.ByItem.Store(sku, *NewByItem(count, amount))
 }
 
+// GetItemDiscount returns discount by sku
+// returns nil if no discount for item
+func (c *Collection) GetItemDiscount(sku gelato.SKU) *ByItem {
+
+	loadedByItem, ok := c.ByItem.Load(sku)
+	if !ok {
+		return nil
+	}
+
+	// do not check error, because values are always discount.ByItem type
+	disc, ok := loadedByItem.(ByItem)
+	if !ok {
+		// strange, maybe log about it
+		return nil
+	}
+
+	return &disc
+}
+
 // LoadFromFile loads from file
 // format of file is csv "SKU;count;amount"
 func LoadFromFile(fileName string) (*Collection, error) {
